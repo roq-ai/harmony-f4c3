@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model account {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  balance       Int
+  accountant_id String?  @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  updated_at    DateTime @default(now()) @db.Timestamp(6)
+  user          user?    @relation(fields: [accountant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model appointment {
+  id                                String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  date                              DateTime @db.Date
+  status                            String   @db.VarChar(255)
+  patient_id                        String?  @db.Uuid
+  doctor_id                         String?  @db.Uuid
+  created_at                        DateTime @default(now()) @db.Timestamp(6)
+  updated_at                        DateTime @default(now()) @db.Timestamp(6)
+  user_appointment_doctor_idTouser  user?    @relation("appointment_doctor_idTouser", fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_appointment_patient_idTouser user?    @relation("appointment_patient_idTouser", fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model inventory {
+  id                String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  item_name         String   @db.VarChar(255)
+  quantity          Int
+  clinic_manager_id String?  @db.Uuid
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @default(now()) @db.Timestamp(6)
+  user              user?    @relation(fields: [clinic_manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model organization {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  image       String?  @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model report {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  report_data String   @db.VarChar(255)
+  patient_id  String?  @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user        user?    @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                                       String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                    String         @unique @db.VarChar(255)
+  firstName                                String?        @db.VarChar(255)
+  lastName                                 String?        @db.VarChar(255)
+  roq_user_id                              String         @db.VarChar(255)
+  tenant_id                                String         @db.VarChar(255)
+  created_at                               DateTime       @default(now()) @db.Timestamp(6)
+  updated_at                               DateTime       @default(now()) @db.Timestamp(6)
+  account                                  account[]
+  appointment_appointment_doctor_idTouser  appointment[]  @relation("appointment_doctor_idTouser")
+  appointment_appointment_patient_idTouser appointment[]  @relation("appointment_patient_idTouser")
+  inventory                                inventory[]
+  organization                             organization[]
+  report                                   report[]
+}
